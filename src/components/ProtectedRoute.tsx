@@ -1,5 +1,6 @@
 import { Navigate, Outlet } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import type { UserRole } from '../types/auth'
 
 export function ProtectedRoute() {
   const { user, isLoading } = useAuth()
@@ -21,5 +22,13 @@ export function ProtectedRoute() {
     return <Navigate to="/login" replace />
   }
 
+  return <Outlet />
+}
+
+/** Пускает только пользователей с нужной ролью, остальных отправляет на их главную. */
+export function RoleGate({ role }: { role: UserRole }) {
+  const { user } = useAuth()
+  if (!user) return <Navigate to="/login" replace />
+  if (user.role !== role) return <Navigate to={user.role === 'teacher' ? '/teacher' : '/'} replace />
   return <Outlet />
 }

@@ -7,19 +7,15 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { backend, type SignUpParams } from '../lib/backend'
 import type { AuthUser } from '../types/auth'
-import {
-  getSessionUser,
-  loginUser,
-  logoutUser,
-  registerUser,
-} from '../utils/auth'
 
 interface AuthContextValue {
   user: AuthUser | null
   isLoading: boolean
   login: (email: string, password: string) => Promise<void>
-  register: (email: string, password: string, name: string) => Promise<void>
+  /** возвращает 'confirm', если Supabase ждёт подтверждения email */
+  register: (params: SignUpParams) => Promise<'ok' | 'confirm'>
   logout: () => void
 }
 
@@ -30,22 +26,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    setUser(getSessionUser())
-    setIsLoading(false)
+    let cancelled = false
+    backend
+      .restore()
+      .then((u) => !cancelled && setUser(u))
+      .finally(() => !cancelled && setIsLoading(false))
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   const login = useCallback(async (email: string, password: string) => {
-    const authUser = await loginUser(email, password)
-    setUser(authUser)
+    setUser(await backend.signIn(email, password))
   }, [])
 
-  const register = useCallback(async (email: string, password: string, name: string) => {
-    const authUser = await registerUser(email, password, name)
-    setUser(authUser)
+  const register = useCallback(async (params: SignUpParams) => {
+    const result = await backend.signUp(params)
+    if ('needsConfirmation' in result) return 'confirm'
+    setUser(result.user)
+    return 'ok'
   }, [])
 
   const logout = useCallback(() => {
-    logoutUser()
+    void backend.signOut()
     setUser(null)
   }, [])
 

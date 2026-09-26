@@ -2,23 +2,26 @@
 
 @theme {
   --font-sans: "Onest", system-ui, sans-serif;
-  --color-brand-50: #eef4ff;
-  --color-brand-100: #d9e6ff;
-  --color-brand-200: #bcd4ff;
-  --color-brand-300: #8eb8ff;
-  --color-brand-400: #5990ff;
-  --color-brand-500: #3366ff;
-  --color-brand-600: #1a44f5;
-  --color-brand-700: #1434e1;
-  --color-brand-800: #172cb6;
-  --color-brand-900: #192a8f;
+  --color-brand-50: #f1f2fd;
+  --color-brand-100: #e2e5fb;
+  --color-brand-200: #c9cef6;
+  --color-brand-300: #a4acef;
+  --color-brand-400: #7c85e3;
+  --color-brand-500: #5b64d9;
+  --color-brand-600: #4a50c8;
+  --color-brand-700: #3d41a8;
+  --color-brand-800: #333686;
+  --color-brand-900: #2d306b;
   --color-accent-400: #fbbf24;
   --color-accent-500: #f59e0b;
   --color-accent-600: #d97706;
-  --color-surface: #f8fafc;
+  --color-ink: #1b1d2e;
+  --color-surface: #f6f6f9;
   --color-surface-elevated: #ffffff;
-  --color-muted: #64748b;
-  --color-border: #e2e8f0;
+  --color-muted: #6b7085;
+  --color-border: #e7e8ef;
+  --shadow-soft: 0 1px 2px rgba(20, 23, 54, 0.04), 0 10px 30px -14px rgba(20, 23, 54, 0.16);
+  --shadow-lift: 0 2px 4px rgba(20, 23, 54, 0.05), 0 22px 44px -18px rgba(20, 23, 54, 0.28);
 }
 
 * {
@@ -32,11 +35,122 @@ html {
 body {
   margin: 0;
   font-family: var(--font-sans);
-  background: var(--color-surface);
-  color: #0f172a;
+  background-color: var(--color-surface);
+  background-image:
+    radial-gradient(60rem 36rem at 8% -10%, rgba(124, 133, 227, 0.14), transparent 60%),
+    radial-gradient(50rem 30rem at 100% 0%, rgba(255, 196, 160, 0.16), transparent 55%);
+  background-attachment: fixed;
+  color: var(--color-ink);
   -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  letter-spacing: -0.02em;
+}
+
+::selection {
+  background: rgba(124, 133, 227, 0.25);
+}
+
+/* Плавное появление страницы */
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.page-in {
+  animation: page-in 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+/* Лёгкая «волна» появления для списков карточек */
+.stagger > * {
+  animation: page-in 0.4s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.stagger > *:nth-child(2) { animation-delay: 40ms; }
+.stagger > *:nth-child(3) { animation-delay: 80ms; }
+.stagger > *:nth-child(4) { animation-delay: 120ms; }
+.stagger > *:nth-child(5) { animation-delay: 160ms; }
+.stagger > *:nth-child(6) { animation-delay: 200ms; }
+.stagger > *:nth-child(n + 7) { animation-delay: 240ms; }
+
+/* Декоративная сетка точек для шапок разделов */
+.dot-grid {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.35) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-in,
+  .stagger > * {
+    animation: none;
+  }
 }
 
 #root {
   min-height: 100svh;
+}
+
+/* Флеш-карточки: переворот */
+.flip-card {
+  perspective: 1400px;
+}
+
+.flip-card-inner {
+  display: grid;
+  transition: transform 0.5s cubic-bezier(0.4, 0.2, 0.2, 1);
+  transform-style: preserve-3d;
+}
+
+.flip-card-inner.is-flipped {
+  transform: rotateY(180deg);
+}
+
+.flip-card-face {
+  grid-area: 1 / 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 18rem;
+  padding: 3rem 1.75rem 2rem;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.flip-card-back {
+  transform: rotateY(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flip-card-inner {
+    transition: none;
+  }
+}
+
+/* Основная кнопка */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border-radius: 0.8rem;
+  padding: 0.65rem 1.15rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, #5b64d9 0%, #3d41a8 100%);
+  box-shadow: 0 1px 2px rgba(20, 23, 54, 0.1), 0 8px 18px -8px rgba(74, 80, 200, 0.55);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(20, 23, 54, 0.1), 0 12px 24px -10px rgba(74, 80, 200, 0.6);
 }

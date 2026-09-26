@@ -26,15 +26,15 @@ export function MockExamChart({ data, onUpdate }: MockExamChartProps) {
       <div className="flex flex-wrap items-center gap-5 mb-5 text-base text-muted">
         <span className="flex items-center gap-1.5">
           <span className="h-3.5 w-3.5 rounded-sm bg-brand-400" />
-          Тест
+          Тестовая часть
         </span>
         <span className="flex items-center gap-1.5">
           <span className="h-3.5 w-3.5 rounded-sm bg-brand-600" />
-          Письмо
+          Письменная часть
         </span>
         <span className="flex items-center gap-1.5">
           <span className="h-0.5 w-5 border-t-2 border-dashed border-amber-500" />
-          Цель {goalMockExamTargets.total}+
+          Цель {goalMockExamTargets.total}+ (оценка «5»)
         </span>
       </div>
 
@@ -44,7 +44,7 @@ export function MockExamChart({ data, onUpdate }: MockExamChartProps) {
           className="w-full min-w-[700px]"
           style={{ height: chartHeight }}
         >
-          {[0, 10, 20, 30, MOCK_EXAM_CHART_MAX].map((tick) => {
+          {[0, 12, 21, 28, MOCK_EXAM_CHART_MAX].map((tick) => {
             const y = padding.top + (1 - tick / MOCK_EXAM_CHART_MAX) * plotH
             return (
               <g key={tick}>

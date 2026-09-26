@@ -13,10 +13,10 @@ export const practiceModes: PracticeModeInfo[] = [
     id: 'exam',
     title: 'Режим экзамена',
     icon: '📋',
-    description: 'Полный вариант ОГЭ — все 11 заданий подряд, как на реальном экзамене.',
+    description: 'Полный вариант ОГЭ — все 20 заданий подряд, как на реальном экзамене.',
     details: [
-      '11 заданий в порядке демоверсии',
-      'Максимум 37 баллов',
+      '12 заданий с кратким ответом + 8 с развёрнутым',
+      'Максимум 32 балла, на «5» нужно 28 и больше',
       'Таймер и итоговый разбор после сдачи',
     ],
   },
@@ -45,10 +45,13 @@ export const practiceModes: PracticeModeInfo[] = [
 ]
 
 export const examModeConfig = {
-  tasksCount: 11,
-  maxScore: 37,
+  tasksCount: 20,
+  maxScore: 32,
   durationMinutes: 180,
-  slots: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+  parts: [
+    { label: 'краткий ответ', count: 12 },
+    { label: 'развёрнутый ответ', count: 8 },
+  ],
 }
 
 export const marathonPresets = [10, 20, 30, 50] as const

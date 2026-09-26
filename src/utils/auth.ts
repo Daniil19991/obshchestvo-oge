@@ -1,4 +1,9 @@
-import type { AuthSession, AuthUser, StoredUser } from '../types/auth'
+import type { AuthSession, AuthUser, StoredUser, UserRole } from '../types/auth'
+
+/*
+ * Локальная (демо) авторизация: пользователи хранятся в localStorage этого браузера.
+ * Используется, только когда Supabase не настроен (см. src/lib/backend).
+ */
 
 const USERS_KEY = 'obshchestvoznanie-users'
 const SESSION_KEY = 'obshchestvoznanie-session'
@@ -15,7 +20,7 @@ function loadUsers(): StoredUser[] {
   try {
     const raw = localStorage.getItem(USERS_KEY)
     if (!raw) return []
-    return JSON.parse(raw) as StoredUser[]
+    return (JSON.parse(raw) as StoredUser[]).map((u) => ({ ...u, role: u.role ?? 'student' }))
   } catch {
     return []
   }
@@ -23,6 +28,14 @@ function loadUsers(): StoredUser[] {
 
 function saveUsers(users: StoredUser[]): void {
   localStorage.setItem(USERS_KEY, JSON.stringify(users))
+}
+
+function toAuthUser(user: StoredUser): AuthUser {
+  return { id: user.id, email: user.email, name: user.name, role: user.role, createdAt: user.createdAt }
+}
+
+export function listLocalUsers(): AuthUser[] {
+  return loadUsers().map(toAuthUser)
 }
 
 export function loadSession(): AuthSession | null {
@@ -51,13 +64,14 @@ export function getSessionUser(): AuthUser | null {
     saveSession(null)
     return null
   }
-  return { id: user.id, email: user.email, name: user.name, createdAt: user.createdAt }
+  return toAuthUser(user)
 }
 
 export async function registerUser(
   email: string,
   password: string,
   name: string,
+  role: UserRole = 'student',
 ): Promise<AuthUser> {
   const normalizedEmail = email.trim().toLowerCase()
   const users = loadUsers()
@@ -73,22 +87,16 @@ export async function registerUser(
   const user: StoredUser = {
     id: crypto.randomUUID(),
     email: normalizedEmail,
-    name: name.trim() || 'Ученик',
+    name: name.trim() || (role === 'teacher' ? 'Учитель' : 'Ученик'),
+    role,
     createdAt: new Date().toISOString(),
     passwordHash: await hashPassword(password),
   }
 
   users.push(user)
   saveUsers(users)
-
-  const session: AuthSession = {
-    userId: user.id,
-    email: user.email,
-    name: user.name,
-  }
-  saveSession(session)
-
-  return { id: user.id, email: user.email, name: user.name, createdAt: user.createdAt }
+  saveSession({ userId: user.id, email: user.email, name: user.name })
+  return toAuthUser(user)
 }
 
 export async function loginUser(email: string, password: string): Promise<AuthUser> {
@@ -104,13 +112,8 @@ export async function loginUser(email: string, password: string): Promise<AuthUs
     throw new Error('Неверный email или пароль')
   }
 
-  saveSession({
-    userId: user.id,
-    email: user.email,
-    name: user.name,
-  })
-
-  return { id: user.id, email: user.email, name: user.name, createdAt: user.createdAt }
+  saveSession({ userId: user.id, email: user.email, name: user.name })
+  return toAuthUser(user)
 }
 
 export function logoutUser(): void {

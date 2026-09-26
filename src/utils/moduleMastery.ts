@@ -1,7 +1,8 @@
 import type { ModuleMastery, StudentState } from '../types'
 import { theoryModules } from '../data/theory'
 
-const LESSON_BOOST = 12
+/** Все уроки модуля вместе дают до 60%, остальное — задания. */
+const LESSONS_MAX = 60
 const CORRECT_TASK_BOOST = 8
 const INCORRECT_TASK_PENALTY = 6
 
@@ -19,11 +20,11 @@ export function calculateModuleMastery(state: StudentState): ModuleMastery[] {
     const correctTasks = moduleAttempts.filter((a) => a.correct).length
     const incorrectTasks = moduleAttempts.filter((a) => !a.correct).length
 
-    const value = clamp(
-      lessonsDone * LESSON_BOOST +
+    const value = Math.round(clamp(
+      (module.lessons.length ? (lessonsDone / module.lessons.length) * LESSONS_MAX : 0) +
         correctTasks * CORRECT_TASK_BOOST -
         incorrectTasks * INCORRECT_TASK_PENALTY,
-    )
+    ))
 
     return {
       moduleId: module.id,
@@ -39,7 +40,7 @@ export function calculateModuleMastery(state: StudentState): ModuleMastery[] {
 }
 
 export const MASTERY_LEGEND = {
-  lesson: `+${LESSON_BOOST}% за урок`,
+  lesson: `уроки модуля — до ${LESSONS_MAX}%`,
   correct: `+${CORRECT_TASK_BOOST}% за верный ответ`,
   incorrect: `−${INCORRECT_TASK_PENALTY}% за ошибку`,
 }

@@ -1,5 +1,5 @@
 import type { StudentState } from '../types'
-import { GOAL_EXAM_DATE, createEmptyMonthlyMockExams } from '../data/goalPlan'
+import { GOAL_EXAM_DATE, createEmptyMonthlyMockExams, findTopic, findTopicByLesson } from '../data/goalPlan'
 
 const LEGACY_STORAGE_KEY = 'obshchestvoznanie-student'
 
@@ -26,12 +26,14 @@ export function createDefaultStudentState(name = 'Ученик'): StudentState {
       examDate: GOAL_EXAM_DATE,
       completedTopics: [],
       completedTaskNumbers: [],
+      completedTaskTypes: [],
       mockExam: { test: 0, written: 0 },
       mockExamByMonth: createEmptyMonthlyMockExams(),
     },
     completedLessons: [],
     practiceHistory: [],
     taskAttempts: [],
+    flashcards: {},
     achievements: [
       {
         id: 'start',
@@ -56,6 +58,7 @@ function migrateGoal(parsed: Partial<StudentState>): StudentState['goal'] {
       examDate: (old.examDate as string) || GOAL_EXAM_DATE,
       completedTopics: old.completedTopics as string[],
       completedTaskNumbers: (old.completedTaskNumbers as number[]) ?? [],
+      completedTaskTypes: (old.completedTaskTypes as string[]) ?? [],
       mockExam: {
         test: (old.mockExam as { test?: number })?.test ?? 0,
         written: (old.mockExam as { written?: number })?.written ?? 0,
@@ -71,18 +74,39 @@ function migrateGoal(parsed: Partial<StudentState>): StudentState['goal'] {
 }
 
 function parseStudentState(raw: string): StudentState {
-  const parsed = JSON.parse(raw) as Partial<StudentState>
+  return normalizeStudentState(JSON.parse(raw) as Partial<StudentState>)
+}
+
+/** Приводит сохранённое (в т. ч. старое или пришедшее с сервера) состояние к текущему формату. */
+export function normalizeStudentState(parsed: Partial<StudentState>): StudentState {
   const base = createDefaultStudentState(parsed.profile?.name)
-  return {
+  const state: StudentState = {
     ...base,
     ...parsed,
     taskAttempts: parsed.taskAttempts ?? [],
     practiceHistory: parsed.practiceHistory ?? [],
     completedLessons: parsed.completedLessons ?? [],
+    flashcards: parsed.flashcards ?? {},
     achievements: parsed.achievements ?? base.achievements,
     profile: { ...base.profile, ...parsed.profile },
     goal: migrateGoal(parsed),
   }
+  return syncLessonsAndTopics(state)
+}
+
+/** Уроки теории и темы цели — одно и то же; выравниваем старые данные. */
+function syncLessonsAndTopics(state: StudentState): StudentState {
+  const topics = [...state.goal.completedTopics]
+  const lessons = [...state.completedLessons]
+  for (const lessonId of state.completedLessons) {
+    const topic = findTopicByLesson(lessonId)
+    if (topic && !topics.includes(topic.id)) topics.push(topic.id)
+  }
+  for (const topicId of state.goal.completedTopics) {
+    const topic = findTopic(topicId)
+    if (topic && !lessons.includes(topic.lessonId)) lessons.push(topic.lessonId)
+  }
+  return { ...state, completedLessons: lessons, goal: { ...state.goal, completedTopics: topics } }
 }
 
 function migrateLegacyData(userId: string, userName: string): StudentState | null {

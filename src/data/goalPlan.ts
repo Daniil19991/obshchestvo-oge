@@ -1,30 +1,96 @@
+import { theoryModules } from './theory'
+
 export const GOAL_EXAM_DATE = '2027-05-25'
+
+export interface GoalTopic {
+  id: string
+  lessonId: string
+  moduleId: string
+  number: number
+  title: string
+}
 
 export interface GoalModuleBlock {
   moduleId: string
   title: string
   topicsTotal: number
   icon: string
+  topics: GoalTopic[]
 }
 
-export const goalModuleBlocks: GoalModuleBlock[] = [
-  { moduleId: 'human-society', title: 'Человек и общество', topicsTotal: 11, icon: '👤' },
-  { moduleId: 'spiritual-life', title: 'Духовная культура', topicsTotal: 6, icon: '🎭' },
-  { moduleId: 'social-relations', title: 'Социальная сфера', topicsTotal: 7, icon: '👨‍👩‍👧' },
-  { moduleId: 'economics', title: 'Экономика', topicsTotal: 13, icon: '📊' },
-  { moduleId: 'politics', title: 'Политика', topicsTotal: 8, icon: '🏛️' },
-  { moduleId: 'law', title: 'Право', topicsTotal: 11, icon: '⚖️' },
+/** Блок-модули цели строятся из тем «Теории» — список один на весь сайт. */
+export const goalModuleBlocks: GoalModuleBlock[] = theoryModules.map((module) => ({
+  moduleId: module.id,
+  title: module.title,
+  icon: module.icon,
+  topicsTotal: module.lessons.length,
+  topics: module.lessons.map((lesson, index) => ({
+    id: getTopicId(module.id, index + 1),
+    lessonId: lesson.id,
+    moduleId: module.id,
+    number: index + 1,
+    title: lesson.title,
+  })),
+}))
+
+export const allGoalTopics: GoalTopic[] = goalModuleBlocks.flatMap((block) => block.topics)
+
+const topicById = new Map(allGoalTopics.map((t) => [t.id, t]))
+const topicByLessonId = new Map(allGoalTopics.map((t) => [t.lessonId, t]))
+
+export function findTopic(topicId: string): GoalTopic | undefined {
+  return topicById.get(topicId)
+}
+
+export function findTopicByLesson(lessonId: string): GoalTopic | undefined {
+  return topicByLessonId.get(lessonId)
+}
+
+/** ОГЭ по обществознанию с 2027 года: 20 заданий, максимум 32 балла. */
+export const OGE_MAX_SCORE = 32
+
+export interface GradeRange {
+  grade: 2 | 3 | 4 | 5
+  min: number
+  max: number
+}
+
+/** Перевод первичных баллов в оценку. */
+export const gradeScale: GradeRange[] = [
+  { grade: 2, min: 0, max: 11 },
+  { grade: 3, min: 12, max: 20 },
+  { grade: 4, min: 21, max: 27 },
+  { grade: 5, min: 28, max: 32 },
 ]
 
-export const goalTaskNumbers = [1, 5, 6, 12, 21, 22, 23, 24] as const
-
-export const goalMockExamTargets = {
-  total: 32,
-  test: 15,
-  written: 17,
+export function getGrade(score: number): GradeRange {
+  return gradeScale.find((g) => score >= g.min && score <= g.max) ?? gradeScale[gradeScale.length - 1]
 }
 
-export const MOCK_EXAM_CHART_MAX = 37
+export const goalMockExamTargets = {
+  total: 28,
+  grade: 5,
+}
+
+export interface WrittenTaskType {
+  id: string
+  title: string
+  icon: string
+}
+
+/** Задания письменной части (развёрнутый ответ) — цель: решать их уверенно. */
+export const writtenTaskTypes: WrittenTaskType[] = [
+  { id: 'concepts', title: 'Знание понятий', icon: '📖' },
+  { id: 'photo', title: 'Анализ фотоизображения', icon: '📷' },
+  { id: 'finance', title: 'Финансовая грамотность', icon: '💰' },
+  { id: 'statistics', title: 'Анализ статистики', icon: '📊' },
+  { id: 'case', title: 'Кейс', icon: '🧩' },
+  { id: 'text-plan', title: 'План текста', icon: '📝' },
+  { id: 'text-questions', title: 'Вопросы по тексту', icon: '❓' },
+  { id: 'arguments', title: 'Аргументация', icon: '💬' },
+]
+
+export const MOCK_EXAM_CHART_MAX = OGE_MAX_SCORE
 
 export const mockExamMonths = [
   { id: 'sep', label: 'Сен', fullLabel: 'Сентябрь' },
@@ -54,24 +120,4 @@ export function getTopicId(moduleId: string, index: number): string {
 
 export function getModuleTopics(moduleId: string, topicsTotal: number): string[] {
   return Array.from({ length: topicsTotal }, (_, i) => getTopicId(moduleId, i + 1))
-}
-
-export function formatGoalTaskList(): string {
-  const nums = [...goalTaskNumbers]
-  const parts: string[] = []
-  let rangeStart = nums[0]
-  let rangeEnd = nums[0]
-
-  for (let i = 1; i <= nums.length; i++) {
-    if (i < nums.length && nums[i] === rangeEnd + 1) {
-      rangeEnd = nums[i]
-    } else {
-      parts.push(rangeStart === rangeEnd ? `${rangeStart}` : `${rangeStart}–${rangeEnd}`)
-      if (i < nums.length) {
-        rangeStart = nums[i]
-        rangeEnd = nums[i]
-      }
-    }
-  }
-  return parts.join(', ')
 }

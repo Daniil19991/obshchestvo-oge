@@ -8,8 +8,10 @@ interface CardProps {
 }
 
 export function Card({ children, className = '', onClick, hover = false }: CardProps) {
-  const base = 'rounded-2xl border border-border bg-white p-5 shadow-sm'
-  const interactive = hover ? ' cursor-pointer transition-all hover:border-brand-200 hover:shadow-md' : ''
+  const base = 'rounded-[22px] border border-border/80 bg-white p-5 shadow-soft'
+  const interactive = hover
+    ? ' cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-lift'
+    : ''
 
   if (onClick) {
     return (
@@ -19,5 +21,5 @@ export function Card({ children, className = '', onClick, hover = false }: CardP
     )
   }
 
-  return <div className={`${base} ${className}`}>{children}</div>
+  return <div className={`${base}${interactive} ${className}`}>{children}</div>
 }
