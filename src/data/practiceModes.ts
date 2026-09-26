@@ -1,0 +1,54 @@
+export type PracticeMode = 'exam' | 'marathon' | 'errors'
+
+export interface PracticeModeInfo {
+  id: PracticeMode
+  title: string
+  icon: string
+  description: string
+  details: string[]
+}
+
+export const practiceModes: PracticeModeInfo[] = [
+  {
+    id: 'exam',
+    title: 'Режим экзамена',
+    icon: '📋',
+    description: 'Полный вариант ОГЭ — все 11 заданий подряд, как на реальном экзамене.',
+    details: [
+      '11 заданий в порядке демоверсии',
+      'Максимум 37 баллов',
+      'Таймер и итоговый разбор после сдачи',
+    ],
+  },
+  {
+    id: 'marathon',
+    title: 'Марафон',
+    icon: '🏃',
+    description: 'Непрерывная отработка — решайте задания разных типов без остановки.',
+    details: [
+      'Выбор количества заданий в сессии',
+      'Смешение типов для разнообразия',
+      'Статистика серии в конце',
+    ],
+  },
+  {
+    id: 'errors',
+    title: 'Ошибки',
+    icon: '🔄',
+    description: 'Повторите задания, в которых допустили ошибки — закрепите слабые места.',
+    details: [
+      'Только неверно решённые задания',
+      'Группировка по модулям и типам',
+      'Исчезают после верного ответа',
+    ],
+  },
+]
+
+export const examModeConfig = {
+  tasksCount: 11,
+  maxScore: 37,
+  durationMinutes: 180,
+  slots: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+}
+
+export const marathonPresets = [10, 20, 30, 50] as const
